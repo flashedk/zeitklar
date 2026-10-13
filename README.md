@@ -168,3 +168,7 @@ Browserdaten hängen an Browserprofil und Domain; ein anderer Browser oder ein a
 Über **Datenexport** werden Einstellungen, Einträge, Monatsabgleiche, Quittierungen, ungeprüfte Uploads und alle Nachweisversionen als JSON heruntergeladen. Beide Versionen können den Export über „Sicherung einlesen“ übernehmen (Docker: in der Seitenleiste unter „Daten exportieren“) – so lassen sich Daten auch zwischen Browser- und Docker-Version umziehen.
 
 Für eine vollständige wiederherstellbare Sicherung den Container stoppen und das Docker-Volume sichern; beim Wiederherstellen das gesamte Datenverzeichnis mit passenden Rechten für Benutzer `node` zurückspielen. SQLite-Dateien inklusive `-wal`/`-shm` gehören zusammen – keine laufende Datenbankdatei isoliert kopieren.
+
+## Lizenz
+
+Zeitklar steht unter der [MIT-Lizenz](LICENSE). Verwendete Drittanbieter-Komponenten behalten ihre jeweiligen Lizenzen.
