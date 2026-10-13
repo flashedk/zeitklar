@@ -1,6 +1,6 @@
+import { julyText, decemberText } from './helpers/synthetic-dpl.mjs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { readFileSync } from 'node:fs';
 import { yearOverview } from '../src/lib/year-overview';
 import { defaultRules, emptySettlement, type Entry } from '../src/lib/model';
 import { parseText } from '../src/lib/importer';
@@ -70,9 +70,7 @@ test('missing months remain null, while observed zero pay and overtime enter ave
 });
 
 test('annual report pay matches monthly calculation and composition includes continued pay', () => {
-  const reports = ['dpl-july-2026.txt', 'dpl-sick-december-2025.txt'].map(
-    name => parseText(readFileSync(`tests/fixtures/${name}`, 'utf8'), name).report!
-  );
+  const reports = [julyText, decemberText].map(text => parseText(text, 'synthetic.txt').report!);
   for (const r of reports) {
     const data = page({ reports, settlement: emptySettlement(r.period), month: r.period });
     const annual = yearOverview(data, Number(r.period.slice(0, 4)));

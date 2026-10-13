@@ -7,6 +7,8 @@ node_modules/
 # Local app data, exports from test runs, and credentials
 /data/
 /tmp/
+# Private report copies must never become test inputs or repository content.
+/tests/fixtures/
 .env
 .env.*
 !.env.example

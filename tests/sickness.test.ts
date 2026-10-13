@@ -1,6 +1,6 @@
+import { julyText, decemberText } from './helpers/synthetic-dpl.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import { automaticSickPay, automaticVacationPay, compensationTotal } from '../src/lib/sickness';
 import { auditReport } from '../src/lib/audit';
 import { isSickReportDay } from '../src/lib/absence';
@@ -36,9 +36,7 @@ const report = (period: string, night: number): TimeReport => ({
 });
 const references = [report('2025-11', 20), report('2025-12', 20), report('2026-01', 25)];
 function example(): TimeReport {
-  const header = readFileSync('tests/fixtures/dpl-july-2026.txt', 'utf8')
-    .split(/\r?\n/)
-    .find(l => l.includes('Tg Text'))!;
+  const header = julyText.split(/\r?\n/).find(l => l.includes('Tg Text'))!;
   const row = (label: string, clock: string, credited: boolean) => {
     let s = ' '.repeat(131);
     const put = (offset: number, v: string) => {
@@ -220,12 +218,12 @@ test('changing a continuation sickness marker changes report identity and paymen
 });
 
 test('December counts exactly the two annotated days and adds sick pay to remuneration', () => {
-  const december = parseText(readFileSync('tests/fixtures/dpl-sick-december-2025.txt', 'utf8')).report!;
+  const december = parseText(decemberText).report!;
   const profile = { ...rules, hourlyRate: 33.8 };
   const prior = ['2025-09', '2025-10', '2025-11'].map(m => report(m, 0.32));
   const sickness = automaticSickPay([], [...prior, december], profile, '2025-12')!;
   assert.equal(sickness.count, 2);
-  assert.deepEqual(sickness.lines[0].dates, ['2025-12-01', '2025-12-02']);
+  assert.deepEqual(sickness.lines[0].dates, ['2025-12-08', '2025-12-09']);
   assert.deepEqual(sickness.lines[0].months, ['2025-09', '2025-10', '2025-11']);
   assert.equal(sickness.lines[0].dailyRate, 0.1);
   assert.equal(sickness.amount, 0.2);
@@ -236,8 +234,8 @@ test('December counts exactly the two annotated days and adds sick pay to remune
   assert.doesNotMatch(days.detail, /€|Tagessatz|Referenztage/);
   assert.match(sickness.checks[1].detail, /2 × 0,10/);
   const audit = auditReport(december, profile, emptySettlement('2025-12'));
-  assert.equal(audit.estimatedPay, 21.29);
-  assert.equal(compensationTotal(audit, sickness), 21.49);
+  assert.equal(audit.estimatedPay, 13.52);
+  assert.equal(compensationTotal(audit, sickness), 13.72);
 });
 
 test('a month with only sick pay has a total; missing or ambiguous bases remain open', () => {
@@ -271,7 +269,7 @@ test('reference months use total night hours when both split fields are blank an
 });
 
 test('December uses fixed 1/65 even with eleven absence days in the three prior months', () => {
-  const december = parseText(readFileSync('tests/fixtures/dpl-sick-december-2025.txt', 'utf8')).report!;
+  const december = parseText(decemberText).report!;
   const profile = { ...rules, hourlyRate: 33.8 };
   const entries = [
     ...[

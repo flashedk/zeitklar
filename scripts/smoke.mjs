@@ -1,6 +1,6 @@
+import { julyText, mayText, syntheticPdf } from '../tests/helpers/synthetic-dpl.mjs';
 // Run against an isolated running server: BASE_URL=http://127.0.0.1:... node scripts/smoke.mjs
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import { parse, unflatten } from 'devalue';
 const base = process.env.BASE_URL || 'http://127.0.0.1:5174';
 const auth = process.env.SMOKE_PASSWORD
@@ -18,28 +18,22 @@ async function action(name, form, expected = 200) {
   return { type: result.type, data: result.data ? parse(result.data) : result };
 }
 const pdfForm = new FormData();
-pdfForm.set(
-  'file',
-  new File([readFileSync('tests/fixtures/dpl-july-2026.pdf')], 'DPL-Daten.pdf', { type: 'application/pdf' })
-);
+pdfForm.set('file', new File([syntheticPdf(julyText)], 'DPL-Daten.pdf', { type: 'application/pdf' }));
 const pdf = await action('preview', pdfForm);
 assert.equal(pdf.type, 'success');
 assert.equal(pdf.data.preview.report.period, '2026-07');
 const txtForm = new FormData();
-txtForm.set(
-  'file',
-  new File([readFileSync('tests/fixtures/dpl-july-2026.txt')], 'DPL-Daten.txt', { type: 'text/plain' })
-);
+txtForm.set('file', new File([julyText], 'DPL-Daten.txt', { type: 'text/plain' }));
 const txt = await action('preview', txtForm);
 assert.deepEqual(pdf.data.preview.report.totals, txt.data.preview.report.totals);
 assert.deepEqual(pdf.data.preview.report.wageTypes, txt.data.preview.report.wageTypes);
 const pastedForm = new FormData();
-pastedForm.set('text', readFileSync('tests/fixtures/dpl-july-2026.txt', 'utf8'));
+pastedForm.set('text', julyText);
 const pasted = await action('paste-preview', pastedForm);
 assert.equal(pasted.data.preview.report.period, '2026-07');
 assert.deepEqual(pasted.data.preview.report.totals, txt.data.preview.report.totals);
 const batchForm = new FormData();
-batchForm.append('file', new File([readFileSync('tests/fixtures/dpl-may-midnight-2026.txt')], 'Mai.txt'));
+batchForm.append('file', new File([mayText], 'Mai.txt'));
 batchForm.append('file', new File(['unreadable file'], 'broken.pdf'));
 const batch = await action('preview', batchForm);
 assert.deepEqual(batch.data.uploadMonths, ['2026-05']);
@@ -65,7 +59,7 @@ await action('import', equivalent);
 const data = await (await fetch(`${base}/api/export`, { headers: auth })).json();
 const julyReports = data.reports.filter(r => r.report.period === '2026-07');
 assert.equal(julyReports.length, 1, 'PDF/TXT of identical report must deduplicate');
-assert.equal(julyReports[0].report.totals.actualHours, 154.75);
+assert.equal(julyReports[0].report.totals.actualHours, 120);
 const entry = new FormData();
 for (const [key, value] of Object.entries({
   date: '2026-07-03',
@@ -109,9 +103,9 @@ assert.ok(
     annualHtml.includes('Zeitkonto im Jahresverlauf')
 );
 const html = await (await fetch(`${base}/?month=2026-07&tab=Monat`, { headers: auth })).text();
-assert.ok(html.includes('Juli 2026') && html.includes('154,75'));
+assert.ok(html.includes('Juli 2026') && html.includes('120,00'));
 const mayForm = new FormData();
-mayForm.set('text', readFileSync('tests/fixtures/dpl-may-midnight-2026.txt', 'utf8'));
+mayForm.set('text', mayText);
 const mayPreview = await action('paste-preview', mayForm);
 assert.equal(mayPreview.data.preview.report.days[0].spans[0].end, '24:00');
 const mayImport = new FormData();
@@ -123,32 +117,32 @@ const mayChecks = (await pageData('2026-05')).review.employerChecks;
 const assumedAccount = mayChecks.find(check => check.title.startsWith('Zeitkonto'));
 assert.equal(
   assumedAccount.expected,
-  12.5,
+  8,
   'missing opening balance uses an explicit zero/manual assumption instead of a blank result'
 );
 assert.equal(assumedAccount.status, 'review');
 assert.match(assumedAccount.detail, /0,00/);
-assert.equal(mayChecks.find(check => check.title.startsWith('Monatssaldo')).expected, 12.5);
+assert.equal(mayChecks.find(check => check.title.startsWith('Monatssaldo')).expected, 8);
 const completeMay = {
   ...mayPreview.data.preview.report,
   totals: {
     ...mayPreview.data.preview.report.totals,
-    openingBalance: 73.1,
-    closingBalance: 85.6,
-    plannedTarget: 151,
-    monthlyBalance: 12.5
+    openingBalance: 20,
+    closingBalance: 28,
+    plannedTarget: 12,
+    monthlyBalance: 8
   },
-  wageTypes: { ...mayPreview.data.preview.report.wageTypes, overtimeBonus: 5.5 }
+  wageTypes: { ...mayPreview.data.preview.report.wageTypes, overtimeBonus: 4 }
 };
 const correctedMay = new FormData();
 correctedMay.set('report', JSON.stringify(completeMay));
 await action('import', correctedMay);
 const completeMayChecks = (await pageData('2026-05')).review.employerChecks;
-assert.equal(completeMayChecks.find(check => check.title.startsWith('Zeitkonto')).expected, 85.6);
+assert.equal(completeMayChecks.find(check => check.title.startsWith('Zeitkonto')).expected, 28);
 assert.equal(completeMayChecks.find(check => check.title.startsWith('Zeitkonto')).status, 'ok');
 const overtimeCalculation = completeMayChecks.find(check => check.title.startsWith('Überstundenbasis'));
-assert.equal(overtimeCalculation.expected, 5.5);
-assert.equal(overtimeCalculation.reported, 5.5);
+assert.equal(overtimeCalculation.expected, 4);
+assert.equal(overtimeCalculation.reported, 4);
 assert.equal(overtimeCalculation.status, 'ok');
 const higherContract = {
   ...completeMay,

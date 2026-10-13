@@ -1,6 +1,6 @@
+import { julyText } from './helpers/synthetic-dpl.mjs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { readFileSync } from 'node:fs';
 import { auditReport } from '../src/lib/audit';
 import { groupStandbyChecks } from '../src/lib/check-groups';
 import { compactEmployerRows, presentEmployerCheck } from '../src/lib/check-presentation';
@@ -17,13 +17,13 @@ const rules = {
   rateMode: 'manual' as const,
   individualRate: 50.88
 };
-const sample = () => parseText(readFileSync('tests/fixtures/dpl-july-2026.txt', 'utf8')).report!;
+const sample = () => parseText(julyText).report!;
 const prior = (): TimeReport => ({
   period: '2026-06',
   printedAt: '',
   filename: '',
   days: [],
-  totals: { holidayBalance: 11.5 },
+  totals: { holidayBalance: 0 },
   wageTypes: {},
   transfers: [],
   issues: [],
@@ -95,10 +95,10 @@ test('time account and month balance show numeric equations in the heading and e
     audit.hoursSummary,
     source
   );
-  assert.equal(account.title, 'Zeitkonto: 71,50 + 154,75 + 11,40 − 184,00 + 0,00 = 53,65 h');
+  assert.equal(account.title, 'Zeitkonto: 20,00 + 120,00 + 9,50 − 128,00 + 0,00 = 21,50 h');
   assert.equal(account.formula, 'Anfang + Ist + BD-FZA − Vertragssoll + Korrektur');
-  assert.ok(account.facts.includes('BD-FZA-Zugang: 11,40 h'));
-  assert.ok(account.facts.some(fact => fact.startsWith('2026-07-01:')));
+  assert.ok(account.facts.includes('BD-FZA-Zugang: 9,50 h'));
+  assert.ok(account.facts.some(fact => fact.startsWith('2026-07-03:')));
   assert.ok(account.info.includes('Bezahlte BD'));
   assert.ok(!JSON.stringify(account).includes('zugrunde liegende Buchungen'));
   const delta = presentEmployerCheck(
@@ -106,7 +106,7 @@ test('time account and month balance show numeric equations in the heading and e
     audit.hoursSummary,
     source
   );
-  assert.equal(delta.title, 'Monatssaldo: 154,75 − 184,00 = -29,25 h');
+  assert.equal(delta.title, 'Monatssaldo: 120,00 − 128,00 = -8,00 h');
   assert.equal(delta.formula, 'Ist − Vertragssoll');
   assert.ok(delta.info.includes('kein tariflicher Überstundenanspruch'));
 });
@@ -119,9 +119,9 @@ test('overtime uses the higher target and retains source assumptions without del
     source
   );
   assert.equal(view.title, 'Überstunden: 0,00 h');
-  assert.ok(view.facts.includes('Geplantes Soll: 166,75 h'));
-  assert.ok(view.facts.includes('Vertragssoll: 184,00 h'));
-  assert.ok(view.facts.includes('Verwendete Sollzeit: 184,00 h'));
+  assert.ok(view.facts.includes('Geplantes Soll: 124,00 h'));
+  assert.ok(view.facts.includes('Vertragssoll: 128,00 h'));
+  assert.ok(view.facts.includes('Verwendete Sollzeit: 128,00 h'));
   assert.ok(view.info.includes('höheren Sollzeit'));
   assert.ok(!JSON.stringify(view).includes('Die vorhandene leere Lohnart'));
   source.totals.plannedTarget = 200;
@@ -142,13 +142,13 @@ test('BD and holiday accounts split math from tooltip notes and drop requested r
     audit.hoursSummary,
     source
   );
-  assert.ok(bd.formula?.includes('7,84 h Aufbau − 0,00 h Abbau'));
+  assert.ok(bd.formula?.includes('5,70 h Aufbau − 0,00 h Abbau'));
   assert.equal(bd.info, 'Ein ausgewiesenes leeres Abbaufeld wird als 0 h behandelt.');
   assert.ok(!JSON.stringify(bd).includes('Vormonatsumbuchungen'));
   const holidayCheck = audit.checks.find(check => check.title === 'Freizeitkonto Feiertagsarbeit')!;
   const holiday = presentEmployerCheck(holidayCheck, audit.hoursSummary, source);
-  assert.ok(holiday.facts.some(fact => fact.startsWith('11,50 + 0,00 − 0,00 − 0,00 = 11,50 h')));
-  assert.ok(holiday.facts.some(fact => fact.startsWith('Anfangsstand aus 2026-06: 11,50 h')));
+  assert.ok(holiday.facts.some(fact => fact.startsWith('0,00 + 0,00 − 0,00 − 0,00 = 0,00 h')));
+  assert.ok(holiday.facts.some(fact => fact.startsWith('Anfangsstand aus 2026-06: 0,00 h')));
   assert.equal(holiday.info, 'FT-Zeitzuschläge in Euro werden separat in der Vergütung berechnet.');
   assert.ok(!holiday.facts.some(fact => fact.includes('Feiertags-Freizeitausgleich fehlt als Monatssumme')));
 });

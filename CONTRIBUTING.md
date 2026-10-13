@@ -17,8 +17,10 @@ Mit `npm run format` lässt sich der Quellcode formatieren.
 
 ## Was ins Repository gehört
 
-Quellcode, Tests mit anonymisierten Nachweisen, Build-Konfiguration, `package-lock.json`, Dokumentation und die fiktiven Demodaten samt README-Screenshots gehören ins Repository. Das Lockfile ermöglicht reproduzierbare Installationen mit `npm ci`.
+Quellcode, Tests mit vollständig synthetischen Nachweisen, Build-Konfiguration, `package-lock.json`, Dokumentation und die fiktiven Demodaten samt README-Screenshots gehören ins Repository. Das Lockfile ermöglicht reproduzierbare Installationen mit `npm ci`.
 
 `node_modules/`, `.svelte-kit/`, `build/`, `dist-browser/`, `tmp/` und das Portainer-Quellcodearchiv sind lokale oder erzeugte Dateien. Das Archiv lässt sich nach der [Portainer-Anleitung](deploy/portainer/README.md) neu erstellen.
 
-`data/`, Datenbankdateien, persönliche Nachweise, Sicherungsexporte und `.env`-Dateien mit Zugangsdaten dürfen nicht eingecheckt werden. Neue Testdaten vor dem Hinzufügen anonymisieren; für öffentliche Vorschauen die [fiktiven Demodaten](docs/demo/README.md) verwenden. `.env.example` enthält ausschließlich Beispielwerte und gehört ins Repository.
+`data/`, Datenbankdateien, persönliche Nachweise, Sicherungsexporte und `.env`-Dateien mit Zugangsdaten dürfen nicht eingecheckt werden. Auch Nachweise ohne Namen können anhand ihrer Dienstzeiten identifizierbar sein. Deshalb ausschließlich erfundene Testdaten verwenden; für öffentliche Vorschauen die [fiktiven Demodaten](docs/demo/README.md) verwenden. `.env.example` enthält ausschließlich Beispielwerte und gehört ins Repository.
+
+Die Parser-, Speicher- und Uploadtests sowie `scripts/smoke.mjs` verwenden die im Code erzeugten Szenarien aus [`tests/helpers/synthetic-dpl.mjs`](tests/helpers/synthetic-dpl.mjs). Auch die PDF wird ausschließlich aus diesen erfundenen Zeilen im Speicher erstellt. Keine echten Nachweise oder daraus abgeleiteten Dienstpläne ergänzen; `tests/fixtures/` ist vorsorglich von Git ausgeschlossen.

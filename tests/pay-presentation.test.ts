@@ -1,13 +1,13 @@
+import { julyText } from './helpers/synthetic-dpl.mjs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { readFileSync } from 'node:fs';
 import { auditReport } from '../src/lib/audit';
 import { parseText } from '../src/lib/importer';
 import { defaultRules, emptySettlement } from '../src/lib/model';
 import { presentPayLine } from '../src/lib/pay-presentation';
 import { getReportReview, reviewCheckKey } from '../src/lib/review';
 
-const source = () => parseText(readFileSync('tests/fixtures/dpl-july-2026.txt', 'utf8')).report!;
+const source = () => parseText(julyText).report!;
 const rules = {
   ...defaultRules,
   confirmed: true,
@@ -28,11 +28,11 @@ test('hourly pay keeps its quantity, rate and amount while the requested row exp
     assert.ok(!view.basis.includes('Anspruchsvoraussetzungen nicht unabhängig geprüft'));
   }
   const night = audit.payLines.find(line => line.label === 'Nachtarbeit regulär')!;
-  assert.equal(presentPayLine(night).quantity, '28,75 h');
-  assert.equal(night.amount, 292.68);
+  assert.equal(presentPayLine(night).quantity, '3,00 h');
+  assert.equal(night.amount, 30.54);
   const paid = audit.payLines.find(line => line.label === 'Bereitschaftsdienst zur Auszahlung')!;
-  assert.equal(presentPayLine(paid).quantity, '7,84 h');
-  assert.equal(paid.amount, 398.9);
+  assert.equal(presentPayLine(paid).quantity, '5,70 h');
+  assert.equal(paid.amount, 290.02);
   assert.deepEqual(audit, before);
 });
 
@@ -44,8 +44,8 @@ test('shift allowance is one monthly quantity rather than an hour, including leg
   assert.deepEqual(presentPayLine(allowance), { quantity: '1', basis: '' });
   assert.deepEqual(presentPayLine({ ...allowance, quantityUnit: undefined }), { quantity: '1', basis: '' });
   assert.equal(allowance.hours, 1);
-  assert.equal(allowance.rate, 40);
-  assert.equal(allowance.amount, 40);
+  assert.equal(allowance.rate, 20);
+  assert.equal(allowance.amount, 20);
 });
 
 test('cleaning remuneration display does not change existing payout identities or receipts', () => {
@@ -65,5 +65,5 @@ test('cleaning remuneration display does not change existing payout identities o
   const saved = reloaded.employerChecks.find(check => check.title === allowance.title)!;
   assert.equal(saved.key, key);
   assert.equal(saved.acknowledgedAt, acknowledgedAt);
-  assert.equal(saved.expected, 40);
+  assert.equal(saved.expected, 20);
 });

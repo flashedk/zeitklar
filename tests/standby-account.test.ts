@@ -1,6 +1,6 @@
+import { julyText } from './helpers/synthetic-dpl.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import { parseText } from '../src/lib/importer';
 import { auditReport } from '../src/lib/audit';
 import { standbyAccountChecks } from '../src/lib/standby-account';
@@ -9,27 +9,27 @@ import { groupStandbyChecks } from '../src/lib/check-groups';
 import { suggestReference } from '../src/lib/continued-pay';
 import { defaultRules, emptySettlement } from '../src/lib/model';
 
-const sample = () => parseText(readFileSync('tests/fixtures/dpl-july-2026.txt', 'utf8')).report!;
+const sample = () => parseText(julyText).report!;
 const rules = { ...defaultRules, group: '2' as const, rateMode: 'manual' as const, individualRate: 50.88 };
 
-test('the July example separates 11.40 FZA hours and 7.84 payout hours and reconciles the payout account', () => {
+test('the July example separates 9.50 FZA hours and 5.7 payout hours and reconciles the payout account', () => {
   const source = sample(),
     original = structuredClone(source);
-  assert.equal(standbyTimeCredit(source).hours, 11.4);
-  assert.equal(standbyTimeCredit(source, 'paid').hours, 7.84);
+  assert.equal(standbyTimeCredit(source).hours, 9.5);
+  assert.equal(standbyTimeCredit(source, 'paid').hours, 5.7);
   const audit = auditReport(source, rules, emptySettlement(source.period));
   const rows = groupStandbyChecks(audit.checks.map(check => ({ ...check, key: check.title, acknowledgedAt: null })));
   const fza = rows.find(row => row.check.title === 'BD mit Freizeitausgleich')!;
   const paid = rows.find(row => row.check.title === 'BD zur Auszahlung')!;
-  assert.equal(fza.check.expected, 11.4);
-  assert.equal(fza.check.reported, 11.4);
-  assert.equal(fza.children?.length, 3);
-  assert.equal(paid.check.expected, 7.84);
-  assert.equal(paid.check.reported, 7.84);
+  assert.equal(fza.check.expected, 9.5);
+  assert.equal(fza.check.reported, 9.5);
+  assert.equal(fza.children?.length, 2);
+  assert.equal(paid.check.expected, 5.7);
+  assert.equal(paid.check.reported, 5.7);
   assert.equal(paid.children?.length, 1);
   const account = audit.checks.find(check => check.title === 'Faktorisiertes BD-Konto')!;
-  assert.equal(account.expected, 7.84);
-  assert.equal(account.reported, 7.84);
+  assert.equal(account.expected, 5.7);
+  assert.equal(account.reported, 5.7);
   assert.equal(account.status, 'ok');
   assert.equal(audit.checks.find(check => check.title.startsWith('BD-Auszahlung:'))?.status, 'ok');
   assert.deepEqual(source, original);
@@ -39,17 +39,17 @@ test('reported payout hours create one priced payment position and remain separa
   const source = sample();
   const audit = auditReport(source, rules, emptySettlement(source.period));
   const payment = audit.payLines.find(line => line.label === 'Bereitschaftsdienst zur Auszahlung')!;
-  assert.equal(payment.hours, 7.84);
+  assert.equal(payment.hours, 5.7);
   assert.equal(payment.rate, 50.88);
-  assert.equal(payment.amount, 398.9);
-  assert.equal(audit.hoursSummary.standbyCredit.hours, 11.4);
+  assert.equal(payment.amount, 290.02);
+  assert.equal(audit.hoursSummary.standbyCredit.hours, 9.5);
   assert.equal(
     audit.checks.find(check => check.title === 'Auszahlung: Bereitschaftsdienst zur Auszahlung')?.expected,
-    398.9
+    290.02
   );
   const reference = suggestReference(source.period, [source], rules);
-  assert.equal(reference.amounts.standby, 398.9);
-  assert.equal(reference.amounts.timeBonus, 458.11, 'time bonuses exclude BD base pay and the 40 EUR fixed allowance');
+  assert.equal(reference.amounts.standby, 290.02);
+  assert.equal(reference.amounts.timeBonus, 132.34, 'time bonuses exclude BD base pay and the 20 EUR fixed allowance');
 });
 
 test('payout account differences and missing source fields remain visible', () => {

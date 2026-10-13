@@ -1,6 +1,6 @@
+import { julyText } from './helpers/synthetic-dpl.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import { holidayAccountCheck } from '../src/lib/holiday-account';
 import { auditReport } from '../src/lib/audit';
 import { defaultRules, emptySettlement } from '../src/lib/model';
@@ -98,10 +98,10 @@ test('older stored statements read movement fields from raw DPL text and blank a
   assert.equal(check.expected, 11.5);
   assert.equal(check.status, 'ok');
   assert.match(check.detail, /leeres Kontofeld als 0 h/);
-  const july = parseText(readFileSync('tests/fixtures/dpl-july-2026.txt', 'utf8')).report!;
-  const june = report('2026-06', 11.5);
+  const july = parseText(julyText).report!;
+  const june = report('2026-06', 0);
   const carried = holidayAccountCheck(july, rules, [june])!;
-  assert.equal(carried.expected, 11.5);
+  assert.equal(carried.expected, 0);
   assert.equal(carried.status, 'ok');
 });
 

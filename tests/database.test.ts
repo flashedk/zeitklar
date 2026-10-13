@@ -1,8 +1,8 @@
+import { julyText, mayText } from './helpers/synthetic-dpl.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { parseText } from '../src/lib/importer';
 import { validateReport } from '../src/lib/validate-report';
@@ -87,10 +87,10 @@ test('24-hour services require an explicit flag; invalid dates and pauses are re
 });
 
 test('SQLite stores and reloads a DPL report ending at 24:00 on the original date', () => {
-  const report = validateReport(parseText(readFileSync('tests/fixtures/dpl-may-midnight-2026.txt', 'utf8')).report!);
+  const report = validateReport(parseText(mayText).report!);
   assert.equal(db.saveReport(report), true);
   const stored = db.getReport('2026-05')!;
-  assert.equal(stored.days[0].date, '2026-05-04');
+  assert.equal(stored.days[0].date, '2026-05-12');
   assert.equal(stored.days[0].spans[0].end, '24:00');
   assert.equal(db.saveReport(stored), false);
 });
@@ -117,7 +117,7 @@ test('SQLite migrates legacy manual hourly rates and persists an automatic stage
 });
 
 test('SQLite pending queue persists two months, deduplicates and confirms only the chosen report', () => {
-  const july = validateReport(parseText(readFileSync('tests/fixtures/dpl-july-2026.txt', 'utf8')).report!);
+  const july = validateReport(parseText(julyText).report!);
   const august = validateReport({
     ...july,
     period: '2026-08',
@@ -148,7 +148,7 @@ test('SQLite pending queue persists two months, deduplicates and confirms only t
   assert.equal(Number(persisted.trim()), 2, 'separate process reloads durable queue');
   const julyId = db.getPendingReports().find(value => value.report.period === '2026-07')!.id;
   db.confirmPendingReport(julyId);
-  assert.equal(db.getReport('2026-07')?.totals.actualHours, 154.75);
+  assert.equal(db.getReport('2026-07')?.totals.actualHours, 120);
   assert.deepEqual(
     db.getPendingReports().map(value => value.report.period),
     ['2026-08']
@@ -286,7 +286,7 @@ test('SQLite review acknowledgements survive reload, close only reviewed months 
 });
 
 test('SQLite global open-month badge counts queued generic/report uploads once per month', () => {
-  const source = validateReport(parseText(readFileSync('tests/fixtures/dpl-july-2026.txt', 'utf8')).report!);
+  const source = validateReport(parseText(julyText).report!);
   db.savePendingReport({
     ...source,
     period: '2027-01',

@@ -1,13 +1,10 @@
+import { julyText, mayText, syntheticPdf } from './helpers/synthetic-dpl.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
 import { batchUpload, pasteUpload } from '../src/lib/upload';
 import { extractPdf } from '../src/lib/server/pdf';
 import { reportSignature } from '../src/lib/report-signature';
 import type { TimeReport } from '../src/lib/report';
-
-const julyText = await readFile('tests/fixtures/dpl-july-2026.txt', 'utf8');
-const mayText = await readFile('tests/fixtures/dpl-may-midnight-2026.txt', 'utf8');
 
 test('batch upload stores both months immediately and keeps successes when another file fails', async () => {
   const saved: TimeReport[] = [];
@@ -38,7 +35,7 @@ test('batch upload stores both months immediately and keeps successes when anoth
 
 test('actual PDF/TXT duplicates share semantic signature during batch upload', async () => {
   const signatures = new Set<string>(),
-    pdf = await readFile('tests/fixtures/dpl-july-2026.pdf');
+    pdf = syntheticPdf(julyText);
   const result = await batchUpload(
     [new File([julyText], 'july.txt'), new File([pdf], 'july.pdf')],
     extractPdf,

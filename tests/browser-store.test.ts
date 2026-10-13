@@ -1,6 +1,6 @@
+import { julyText, mayText } from './helpers/synthetic-dpl.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import 'fake-indexeddb/auto';
 import {
   addEntries,
@@ -213,7 +213,7 @@ test('browser data survives reads and aborted edits; reports and JSON backup mer
     /Überschneidung/
   );
   assert.equal((await readSnapshot()).entries[0].breakMinutes, 30, 'failed edit transaction preserves original');
-  const report = parseText(readFileSync('tests/fixtures/dpl-july-2026.txt', 'utf8')).report!;
+  const report = parseText(julyText).report!;
   assert.equal(await mutate(s => addReport(s, report)), true);
   assert.equal(
     await mutate(s =>
@@ -227,7 +227,7 @@ test('browser data survives reads and aborted edits; reports and JSON backup mer
   );
   const page = await getPage();
   assert.equal(page.month, '2026-07');
-  assert.equal(page.report?.totals.actualHours, 154.75);
+  assert.equal(page.report?.totals.actualHours, 120);
   const backup = await readSnapshot();
   const result = await restore(JSON.stringify(backup));
   assert.equal(result.inserted, 0);
@@ -242,11 +242,11 @@ test('browser data survives reads and aborted edits; reports and JSON backup mer
 });
 
 test('browser report storage and backup restore preserve a DPL end at 24:00', async () => {
-  const report = parseText(readFileSync('tests/fixtures/dpl-may-midnight-2026.txt', 'utf8')).report!;
+  const report = parseText(mayText).report!;
   assert.equal(await mutate(s => addReport(s, report)), true);
   const snapshot = await readSnapshot();
   const stored = snapshot.reports.find(r => r.report.period === '2026-05')!.report;
-  assert.equal(stored.days[0].date, '2026-05-04');
+  assert.equal(stored.days[0].date, '2026-05-12');
   assert.equal(stored.days[0].spans[0].end, '24:00');
   const result = await restore(JSON.stringify(snapshot));
   assert.equal(result.addedReports, 0);
@@ -291,7 +291,7 @@ test('browser reads and backup import keep legacy rates manual; stage settings s
 });
 
 test('browser report queue retains multiple uploads across reads, confirmation and backup restore', async () => {
-  const july = parseText(readFileSync('tests/fixtures/dpl-july-2026.txt', 'utf8')).report!;
+  const july = parseText(julyText).report!;
   const august = {
     ...july,
     period: '2026-08',

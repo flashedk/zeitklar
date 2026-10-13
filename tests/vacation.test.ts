@@ -1,6 +1,6 @@
+import { decemberText } from './helpers/synthetic-dpl.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import { automaticSickPay, automaticVacationPay, automaticContinuedPay, compensationTotal } from '../src/lib/sickness';
 import { auditReport } from '../src/lib/audit';
 import { isVacationReportDay } from '../src/lib/absence';
@@ -44,8 +44,7 @@ const vacation = (date: string, meta: Entry['meta'] = {}): Entry => ({
   note: '',
   meta
 });
-const december = () =>
-  parseText(readFileSync('tests/fixtures/dpl-sick-december-2025.txt', 'utf8'), 'Dezember.txt').report!;
+const december = () => parseText(decemberText, 'Dezember.txt').report!;
 
 test('December has five vacation days and two sick days; both payroll positions enter the total separately', () => {
   const dec = december(),
@@ -58,14 +57,14 @@ test('December has five vacation days and two sick days; both payroll positions 
     1,
     'both December blocks use the same reference basis'
   );
-  assert.deepEqual(leave.dates, ['2025-12-10', '2025-12-11', '2025-12-12', '2025-12-29', '2025-12-30']);
+  assert.deepEqual(leave.dates, ['2025-12-15', '2025-12-16', '2025-12-17', '2025-12-22', '2025-12-23']);
   assert.equal(leave.count, 5);
   assert.equal(leave.divisor, 65);
   assert.equal(leave.dailyRate, 0.1);
   assert.equal(leave.amount, 0.5);
   assert.equal(pay.lines.find(l => l.kind === 'sick')!.amount, 0.2);
   assert.equal(pay.amount, 0.7);
-  assert.equal(compensationTotal(auditReport(dec, rules, emptySettlement('2025-12')), pay), 21.99);
+  assert.equal(compensationTotal(auditReport(dec, rules, emptySettlement('2025-12')), pay), 14.22);
   const days = pay.checks.find(c => c.title === 'Urlaubstage')!;
   assert.equal(days.expected, 5);
   assert.equal(days.reported, 5);
@@ -91,7 +90,7 @@ test('manual vacation counts workdays once, uses the same 1/65 rate and permits 
   assert.equal(calculate(entries, rules, '2025-12', emptySettlement('2025-12')).credited, 8);
   assert.equal(automaticVacationPay([vacation('2025-12-25')], references, rules, '2025-12')!.count, 0);
   assert.throws(() => validateEntry({ ...entries[0], meta: { vacationPayEligible: 'true' } }), /Ungültige/);
-  const both = automaticVacationPay([vacation('2025-12-10')], [...references, december()], rules, '2025-12')!;
+  const both = automaticVacationPay([vacation('2025-12-15')], [...references, december()], rules, '2025-12')!;
   assert.equal(both.count, 5);
 });
 
@@ -104,10 +103,10 @@ test('generic imports preserve FZA and unpaid vacation exclusions', () => {
 
 test('report vacation without hour credit is excluded and sickness during vacation is never paid twice', () => {
   const dec = december();
-  dec.days.find(d => d.date === '2025-12-10')!.actualHours = null;
-  dec.days.find(d => d.date === '2025-12-10')!.plannedHours = null;
-  dec.days.find(d => d.date === '2025-12-11')!.rawLines.push('Krankheit');
-  const pay = automaticContinuedPay([vacation('2025-12-11')], [...references, dec], rules, '2025-12')!;
+  dec.days.find(d => d.date === '2025-12-15')!.actualHours = null;
+  dec.days.find(d => d.date === '2025-12-15')!.plannedHours = null;
+  dec.days.find(d => d.date === '2025-12-16')!.rawLines.push('Krankheit');
+  const pay = automaticContinuedPay([vacation('2025-12-16')], [...references, dec], rules, '2025-12')!;
   assert.equal(
     pay.lines.filter(l => l.kind === 'vacation').reduce((n, l) => n + l.count, 0),
     3
@@ -116,9 +115,9 @@ test('report vacation without hour credit is excluded and sickness during vacati
     pay.lines.filter(l => l.kind === 'sick').reduce((n, l) => n + l.count, 0),
     3
   );
-  assert.ok(!pay.lines.filter(l => l.kind === 'vacation').some(l => l.dates.includes('2025-12-11')));
+  assert.ok(!pay.lines.filter(l => l.kind === 'vacation').some(l => l.dates.includes('2025-12-16')));
   const unpaid = structuredClone(dec);
-  unpaid.days.find(d => d.date === '2025-12-29')!.rawLines.push('unbezahlter Urlaub');
+  unpaid.days.find(d => d.date === '2025-12-22')!.rawLines.push('unbezahlter Urlaub');
   assert.equal(automaticVacationPay([], [...references, unpaid], rules, '2025-12')!.count, 2);
 });
 
@@ -245,14 +244,14 @@ test('missing reference months leave vacation pay and the combined total open', 
 test('vacation annotation changes report identity, payout checks survive reload and changed bases reopen them', () => {
   const before = december(),
     changed = structuredClone(before);
-  changed.days.find(d => d.date === '2025-12-10')!.rawLines = changed.days
-    .find(d => d.date === '2025-12-10')!
+  changed.days.find(d => d.date === '2025-12-15')!.rawLines = changed.days
+    .find(d => d.date === '2025-12-15')!
     .rawLines.map(l => l.replace('Urlaub', 'Arbeit'));
-  changed.days.find(d => d.date === '2025-12-10')!.spans = changed.days
-    .find(d => d.date === '2025-12-10')!
+  changed.days.find(d => d.date === '2025-12-15')!.spans = changed.days
+    .find(d => d.date === '2025-12-15')!
     .spans.map(s => ({ ...s, label: s.label.replace('Urlaub', 'Arbeit') }));
   assert.notEqual(reportSignature(before), reportSignature(changed));
-  const entries = [vacation('2025-12-10')],
+  const entries = [vacation('2025-12-15')],
     pay = automaticContinuedPay(entries, references, rules, '2025-12')!;
   const review = getReportReview(null, rules, entries, emptySettlement('2025-12'), [], pay),
     check = review.employerChecks.find(c => c.title.startsWith('Auszahlung:'))!;

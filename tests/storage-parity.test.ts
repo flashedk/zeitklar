@@ -1,6 +1,7 @@
+import { julyText } from './helpers/synthetic-dpl.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, readFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import 'fake-indexeddb/auto';
@@ -44,7 +45,7 @@ test('a legacy SQLite file is migrated once on open and the result is persisted'
   }
 });
 
-const july = readFileSync('tests/fixtures/dpl-july-2026.txt', 'utf8');
+const july = julyText;
 const form = (fields: Record<string, string>) => {
   const value = new FormData();
   for (const [key, field] of Object.entries(fields)) value.set(key, field);
