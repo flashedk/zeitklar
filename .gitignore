@@ -1,0 +1,26 @@
+# Dependencies and generated builds
+node_modules/
+.svelte-kit/
+/build/
+/dist-browser/
+
+# Local app data, exports from test runs, and credentials
+/data/
+/tmp/
+.env
+.env.*
+!.env.example
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+*.log
+
+# Generated deployment package
+/deploy/portainer/zeitklar-source.tar.gz
+
+# Editor and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

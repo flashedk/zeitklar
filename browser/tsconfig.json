@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "allowJs": true,
+    "checkJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "types": ["vite/client", "node"],
+    "paths": {
+      "$lib/*": ["../src/lib/*"],
+      "$app/forms": ["./forms.ts"],
+      "$app/navigation": ["./navigation.ts"]
+    }
+  },
+  "include": [
+    "./**/*.ts",
+    "./**/*.svelte",
+    "../src/lib/**/*.ts",
+    "../src/lib/**/*.svelte",
+    "../src/routes/+page.svelte",
+    "../.svelte-kit/types/src/routes/$types.d.ts"
+  ]
+}

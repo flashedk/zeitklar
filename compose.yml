@@ -1,0 +1,15 @@
+services:
+  zeitklar:
+    build: .
+    ports:
+      - '127.0.0.1:3000:3000'
+    environment:
+      ORIGIN: ${ORIGIN:-http://localhost:3000}
+      APP_PASSWORD: ${APP_PASSWORD:-}
+      ADDRESS_HEADER: ${ADDRESS_HEADER:-}
+    volumes:
+      - zeitklar-data:/app/data
+    restart: unless-stopped
+    init: true
+volumes:
+  zeitklar-data:

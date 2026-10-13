@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Formatting
+        run: npm run format:check
+
+      - name: Type-check (SvelteKit)
+        run: npm run check
+
+      - name: Type-check (browser build)
+        run: npm run check:browser
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build (SvelteKit server)
+        run: npm run build
+
+      - name: Build (browser static)
+        run: npm run build:browser

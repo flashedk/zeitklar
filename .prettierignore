@@ -1,0 +1,12 @@
+node_modules
+build
+dist-browser
+.svelte-kit
+tmp
+data
+static
+docs
+tests/fixtures
+deploy/portainer/zeitklar-source.tar.gz
+package-lock.json
+*.md

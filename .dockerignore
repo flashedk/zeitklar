@@ -1,0 +1,15 @@
+node_modules
+.svelte-kit
+build
+data
+.env
+.env.*
+.git
+tmp
+dist-browser
+deploy
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+*.log

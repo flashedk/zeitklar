@@ -1,0 +1,41 @@
+{
+  "name": "zeitklar",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev": "vite dev --host 127.0.0.1",
+    "build": "vite build",
+    "start": "node build",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "test": "tsx --test tests/*.test.ts",
+    "build:browser": "vite build --config browser/vite.config.ts",
+    "dev:browser": "vite --config browser/vite.config.ts",
+    "preview:browser": "vite preview --config browser/vite.config.ts",
+    "check:browser": "svelte-check --tsconfig browser/tsconfig.json",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "demo:generate": "tsx scripts/generate-demo.ts",
+    "demo:screenshots": "node scripts/capture-demo.mjs"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^5.4.296"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-node": "^5.2.12",
+    "@sveltejs/kit": "^2.37.0",
+    "@sveltejs/vite-plugin-svelte": "^6.1.0",
+    "@types/node": "^24.0.0",
+    "fake-indexeddb": "^6.2.5",
+    "prettier": "3.9.10",
+    "prettier-plugin-svelte": "3.5.2",
+    "svelte": "^5.38.0",
+    "svelte-check": "^4.3.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.0"
+  }
+}
